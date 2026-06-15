@@ -82,7 +82,7 @@ if ($ReportData.Count -gt 0) {
 
     # --- Azure Logic App के ज़रिए ईमेल भेजना ---
     # सुरक्षा के लिए गिटहब पर अपना असली URL न डालें, इसे ऐसे ही लिखें:
-    $LogicAppURL = "https://prod-07.denmarkeast.logic.azure.com:443/workflows/e9773f03f0284a5283a577108682d75c/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=tnhgSsn2j3h8PhWbpNN6TxtWUfTsXaOH2ccl8UHWLUg"
+$LogicAppURL = Get-AzAutomationVariable -Name "LogicAppEmailURL"
 
     # यदि लाइव रन करते समय यूआरएल बदला गया है, तभी ईमेल भेजें
     if ($LogicAppURL -ne "YOUR_LOGIC_APP_HTTP_POST_URL_HERE") {
