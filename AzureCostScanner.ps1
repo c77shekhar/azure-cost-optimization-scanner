@@ -69,3 +69,31 @@ if ($ReportData.Count -gt 0) {
 } else {
     Write-Host "All clear! No optimization needed." -ForegroundColor Green
 }
+
+# 5. HTML रिपोर्ट जनरेट करना
+if ($ReportData.Count -gt 0) {
+    $HtmlBody = $ReportData | ConvertTo-Html -Head $Header | Out-String
+    $HtmlBody = $HtmlBody -replace '<td>High</td>', '<td class="High">High</td>'
+    $HtmlBody = $HtmlBody -replace '<td>Medium</td>', '<td class="Medium">Medium</td>'
+    $HtmlBody = $HtmlBody -replace '<td>Low</td>', '<td class="Low">Low</td>'
+    
+    $HtmlBody | Out-File "./AzureCostReport.html"
+    Write-Host "Report saved as AzureCostReport.html" -ForegroundColor Green
+
+    # --- Azure Logic App के ज़रिए ईमेल भेजना ---
+    # सुरक्षा के लिए गिटहब पर अपना असली URL न डालें, इसे ऐसे ही लिखें:
+    $LogicAppURL = "https://prod-07.denmarkeast.logic.azure.com:443/workflows/e9773f03f0284a5283a577108682d75c/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=tnhgSsn2j3h8PhWbpNN6TxtWUfTsXaOH2ccl8UHWLUg"
+
+    # यदि लाइव रन करते समय यूआरएल बदला गया है, तभी ईमेल भेजें
+    if ($LogicAppURL -ne "YOUR_LOGIC_APP_HTTP_POST_URL_HERE") {
+        $BodyJson = @{ body = $HtmlBody } | ConvertTo-Json
+        Write-Host "Sending report to Gmail via Logic App..." -ForegroundColor Yellow
+        Invoke-RestMethod -Uri $LogicAppURL -Method Post -Body $BodyJson -ContentType "application/json"
+        Write-Host "Email sent successfully!" -ForegroundColor Green
+    } else {
+        Write-Host "Skipping email: Logic App URL is placeholder." -ForegroundColor Orange
+    }
+} else {
+    Write-Host "All clear! No optimization needed." -ForegroundColor Green
+}
+
