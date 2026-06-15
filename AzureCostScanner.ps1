@@ -90,10 +90,10 @@ if ($ReportData.Count -gt 0) {
             Invoke-RestMethod -Uri $LogicAppURL -Method Post -Body $BodyJson -ContentType "application/json"
             Write-Host "Email sent successfully!" -ForegroundColor Green
         } else {
-            Write-Host "Skipping email: Variable 'LogicAppEmailURL' is empty or not found." -ForegroundColor **Yellow**
+            Write-Host "Skipping email: Variable 'LogicAppEmailURL' is empty or not found." -ForegroundColor Yellow
         }
     } catch {
-        Write-Host "Skipping email: Cannot fetch Azure Automation Variable. Error: $_" -ForegroundColor **Yellow**
+        Write-Host "Skipping email: Cannot fetch Azure Automation Variable. Error: $_" -ForegroundColor Yellow
     }
 } else {
     Write-Host "All clear! No optimization needed." -ForegroundColor Green
