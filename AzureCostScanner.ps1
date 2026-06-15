@@ -1,9 +1,22 @@
-# Azure Cost Optimization Scanner Script
-$ReportData = @()
+# ====================================================================
+# PROJECT: Azure Automated Cost Optimization & FinOps Scanner
+# AUTHOR: c77shekhar (GitHub Portfolio)
+# SECURITY: Uses Native Azure Automation System-Assigned Identity & Variables
+# ====================================================================
 
+# 1. अज़्योर ऑटोमेशन की आइडेंटिटी से लॉगिन करना (For Serverless Runbook execution)
+Disable-AzContextAutosave -Scope Process | Out-Null
+try {
+    $AzureContext = (Connect-AzAccount -Identity).Context
+    Write-Host "Successfully authenticated using Managed Identity." -ForegroundColor Green
+} catch {
+    Write-Host "Managed Identity login failed. If running locally, please run Connect-AzAccount first." -ForegroundColor Yellow
+}
+
+$ReportData = @()
 Write-Host "--- Azure Cost Optimization Scan Starting ---" -ForegroundColor Cyan
 
-# 1. Unattached Disks स्कैन
+# 2. Unattached Disks स्कैन
 $unattachedDisks = Get-AzDisk | Where-Object {$_.DiskState -eq 'Unattached'}
 foreach ($disk in $unattachedDisks) {
     $ReportData += [PSCustomObject]@{
@@ -15,7 +28,7 @@ foreach ($disk in $unattachedDisks) {
     }
 }
 
-# 2. Stopped VMs स्कैन (जो Deallocated नहीं हैं)
+# 3. Stopped VMs स्कैन (जो Deallocated नहीं हैं)
 $vms = Get-AzVM -Status
 $stoppedVMs = $vms | Where-Object {$_.PowerState -eq 'VM stopped'}
 foreach ($vm in $stoppedVMs) {
@@ -28,7 +41,7 @@ foreach ($vm in $stoppedVMs) {
     }
 }
 
-# 3. Unused Public IPs स्कैन
+# 4. Unused Public IPs स्कैन
 $publicIPs = Get-AzPublicIpAddress
 $unusedIPs = $publicIPs | Where-Object {$_.IpConfiguration -eq $null}
 foreach ($ip in $unusedIPs) {
@@ -41,7 +54,7 @@ foreach ($ip in $unusedIPs) {
     }
 }
 
-# 4. HTML स्टाइल और डिजाइन
+# 5. HTML रिपोर्ट डिजाइन
 $Header = @"
 <style>
     body { font-family: Arial, sans-serif; }
@@ -57,20 +70,7 @@ $Header = @"
 <p>The following resources are consuming budget without active usage:</p>
 "@
 
-# 5. HTML रिपोर्ट जनरेट करना
-if ($ReportData.Count -gt 0) {
-    $HtmlBody = $ReportData | ConvertTo-Html -Head $Header | Out-String
-    $HtmlBody = $HtmlBody -replace '<td>High</td>', '<td class="High">High</td>'
-    $HtmlBody = $HtmlBody -replace '<td>Medium</td>', '<td class="Medium">Medium</td>'
-    $HtmlBody = $HtmlBody -replace '<td>Low</td>', '<td class="Low">Low</td>'
-    
-    $HtmlBody | Out-File "./AzureCostReport.html"
-    Write-Host "Report saved as AzureCostReport.html" -ForegroundColor Green
-} else {
-    Write-Host "All clear! No optimization needed." -ForegroundColor Green
-}
-
-# 5. HTML रिपोर्ट जनरेट करना
+# 6. HTML रिपोर्ट और सुरक्षित ईमेल ट्रिगर
 if ($ReportData.Count -gt 0) {
     $HtmlBody = $ReportData | ConvertTo-Html -Head $Header | Out-String
     $HtmlBody = $HtmlBody -replace '<td>High</td>', '<td class="High">High</td>'
@@ -80,19 +80,21 @@ if ($ReportData.Count -gt 0) {
     $HtmlBody | Out-File "./AzureCostReport.html"
     Write-Host "Report saved as AzureCostReport.html" -ForegroundColor Green
 
-    # --- Azure Logic App के ज़रिए ईमेल भेजना ---
-    # सुरक्षा के लिए गिटहब पर अपना असली URL न डालें, इसे ऐसे ही लिखें:
-rod-07.denmarkeast.logic.azure.com:443/workflows/e9773f03f0284a5283a577108682d75c/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=tnhgSsn2j3h8PhWbpNN6TxtWUfTsXaOH2ccl8UHWLUg"
-    # यदि लाइव रन करते समय यूआरएल बदला गया है, तभी ईमेल भेजें
-    if ($LogicAppURL -ne "YOUR_LOGIC_APP_HTTP_POST_URL_HERE") {
-        $BodyJson = @{ body = $HtmlBody } | ConvertTo-Json
-        Write-Host "Sending report to Gmail via Logic App..." -ForegroundColor Yellow
-        Invoke-RestMethod -Uri $LogicAppURL -Method Post -Body $BodyJson -ContentType "application/json"
-        Write-Host "Email sent successfully!" -ForegroundColor Green
-    } else {
-        Write-Host "Skipping email: Logic App URL is placeholder." -ForegroundColor Orange
+    # --- Securely fetching Webhook URL from Azure Automation Variables ---
+    try {
+        $LogicAppURL = (Get-AzAutomationVariable -Name "LogicAppEmailURL").Value
+        
+        if ($null -ne $LogicAppURL -and $LogicAppURL -ne "") {
+            $BodyJson = @{ body = $HtmlBody } | ConvertTo-Json
+            Write-Host "Sending report to Gmail via Logic App..." -ForegroundColor Yellow
+            Invoke-RestMethod -Uri $LogicAppURL -Method Post -Body $BodyJson -ContentType "application/json"
+            Write-Host "Email sent successfully!" -ForegroundColor Green
+        } else {
+            Write-Host "Skipping email: Variable 'LogicAppEmailURL' is empty or not found." -ForegroundColor Orange
+        }
+    } catch {
+        Write-Host "Skipping email: Cannot fetch Azure Automation Variable. Error: $_" -ForegroundColor Orange
     }
 } else {
     Write-Host "All clear! No optimization needed." -ForegroundColor Green
 }
-
