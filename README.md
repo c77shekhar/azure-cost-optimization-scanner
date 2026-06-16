@@ -1,94 +1,46 @@
-# 💰 Azure Cost Optimization & Savings Scanner
+markdown# 💰 Azure Cost Optimization & Savings Scanner
 
-An automated, 100% serverless PowerShell tool designed to scan Azure infrastructure, identify wasted resources, and generate professional HTML cost-audit reports.
-
----
-
-## 🚀 Key Features
-- **Unattached Disks Scanner:** Automatically detects detached managed disks that are costing money without active use.
-- **Stopped (Billed) VMs:** Finds virtual machines that are stopped but still consuming cloud budget (Not Deallocated).
-- **Orphaned Public IPs:** Highlights unused public IP addresses that are incurring charges.
-- **Client-Ready HTML Reports:** Generates a clean, color-coded dashboard summarizing potential monthly savings.
+An automated, 100% serverless PowerShell engine designed to natively scan Azure subscriptions, identify active billing waste, and compile presentation-ready HTML cost-audit report dashboards directly to your inbox.
 
 ---
 
-## 📊 Sample Report Preview
-*Below is a preview of the automated daily/weekly report sent directly to clients:*
+## 🚀 Key Technical Features
+- **Unattached Disks Scan Matrix:** Automatically tracks down detached, orphaned managed storage volumes bleeding money without active compute bindings.
+- **Multi-OS Stopped Instance Auditor:** Cross-queries lazy-loaded Azure runtime arrays to pinpoint Windows/Linux VMs sitting in a "Stopped" (Allocated/Billed) state instead of Deallocated.
+- **Orphaned Public IPs Detector:** Highlights loose, disassociated network public IP allocations charging ongoing standard preservation fees.
+- **Enterprise Notification Automation:** Natively interfaces via serverless workflows to dispatch beautiful, styled HTML data matrices straight to stakeholders' Outlook inboxes.
 
-| Issue Type | Resource Group | Resource Name | Details | Severity |
+---
+
+## 📊 Sample Report Dashboard Layout
+*Below is a structural preview of the automated weekly report delivered to stakeholders:*
+
+| Issue Type | Resource Group | Resource Name | Details / Specifications | Severity Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **Unattached Disk** | rg-production-vms | prod-db-disk-02 | Size: 128GB, SKU: Premium_LRS | 🔴 High |
-| **Stopped (Billed) VM** | rg-testing-environment | dev-test-vm01 | Location: EastUS | 🟠 Medium |
-| **Unused Public IP** | rg-networking-prod | web-alb-public-ip | IP Address: 40.85.xx.xx | 🟢 Low |
+| **Unattached Disk** | rg-production-vms | prod-db-disk-02 | Size: 128GB | SKU: Premium_LRS | 🔴 High |
+| **Stopped VM (Billed)** | rg-testing-environment | dev-linux-node01 | OS: Linux | Compute allocated but idle | 🟠 Medium |
+| **Unused Public IP** | rg-networking-prod | web-alb-public-ip | IP Routing Target: 40.85.xx.xx | 🟢 Low |
 
 ---
 
-## ⚙️ How to Run This Tool
-
-### Method 1: Local / Azure Cloud Shell (Manual Audit)
-1. Log in to your Azure Account:
-   ```powershell
-   Connect-AzAccount
-   ```
-2. Run the script:
-   ```powershell
-   ./AzureCostScanner.ps1
-   ```
-3. Open the generated `AzureCostReport.html` to view the findings.
+## 🔒 Enterprise Safety & Data Compliance (Client Peace of Mind)
+- **100% Read-Only Scope:** The engine strictly leverages standard `Get-Az*` commands. It possesses **zero deletion or mutation capabilities**, ensuring absolute safety for live production environments.
+- **Enforced Least Privilege Model:** Operates perfectly under the native Microsoft **Reader** RBAC role context. No Global Admin or Subscription Owner permissions required.
+- **100% Strict Data Privacy:** Completely self-contained and local. Your cloud topology infrastructure and billing data never leave your secure Azure tenant boundary layer.
 
 ---
 
-## 💼 Looking to Optimize Your Azure Cloud Bill?
-I am a freelance Cloud Optimization Specialist. If your business wants to cut down its monthly Azure bill by **20% to 40%** without risking any data loss, let's connect!
-## 🔒 Security & Compliance (Client Peace of Mind)
-This tool is designed with enterprise security standards in mind to ensure zero operational risk:
-- **Read-Only Actions:** The scanner strictly uses `Get-Az*` commands. It possesses **zero deletion capability** and cannot modify your infrastructure.
-- **Least Privilege Access:** Runs perfectly under the standard Azure **Reader** RBAC role. No owner or global admin privileges required.
-- **Data Privacy:** 100% serverless execution. Your cloud infrastructure data never leaves your secure Azure tenant or GitHub runner environment.
+## ⚙️ How to Deploy This Framework
+To run this tool natively without complex scripts templates engine validation errors, you can deploy using our validated **Standard Operating Procedure (SOP)**.
+
+- **Option A (Done-For-You):** I can jump on a brief 10-minute discovery call to set up the automation pipelines live on screen share.
+- **Option B (Self-Service Handover):** I provide a highly detailed, non-technical, click-by-click **Enterprise Deployment Manual (SOP Guide)** so your internal system administrator can completely stand up the solution in under 5 minutes without giving me any external access tokens.
 
 ---
 
-## 🛠️ Automated Deployment (GitHub Actions Setup)
-To schedule this scanner to run automatically every Monday morning, configure this GitHub workflow (`.github/workflows/azure-cost-scan.yml`):
+## 💼 Looking to Optimize Your Corporate Azure Bill?
+I am a specialized Cloud FinOps Consultant. If your engineering layers are bleeding credit quotas or you want to shave **20% to 40%** off your monthly Azure statements safely, let's align!
 
-```yaml
-name: Scheduled Azure Cost Audit
-
-on:
-  schedule:
-    - cron: '0 4 * * 1' # Runs every Monday at 4:00 AM UTC
-  workflow_dispatch:
-
-jobs:
-  audit:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          creds: \${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-
-      - name: Run Scanner & Generate Report
-        uses: azure/powershell@v2
-        with:
-          inlineScript: |
-            ./AzureCostScanner.ps1
-          azPSVersion: "latest"
-
-      - name: Archive Production Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: Azure-Cost-Audit-Report
-          path: AzureCostReport.html
-```
-
-## 📬 Contact & Consultation
-If you want to automate this scanner to run weekly on a schedule, set up multi-subscription enterprise alerts, or need help safely cleaning up these resources:
-- **Upwork:** [Your Upwork Profile Link]
-- **LinkedIn:** [Your LinkedIn Profile Link]
-- **Email:** `your.email@domain.com`
-
+- **Hire me on Upwork:** [Insert Your Upwork Profile URL Link Here]
+- **Connect on LinkedIn:** [Insert Your LinkedIn Profile URL Link Here]
+- **Business Email:** `your.email@domain.com`
