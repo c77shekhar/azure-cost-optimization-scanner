@@ -21,6 +21,8 @@ An automated, 100% serverless PowerShell engine designed to natively scan Azure 
 | **Stopped VM (Billed)** | rg-testing-environment | dev-linux-node01 | OS: Linux | Compute allocated but idle | 🟠 Medium |
 | **Unused Public IP** | rg-networking-prod | web-alb-public-ip | IP Routing Target: 40.85.xx.xx | 🟢 Low |
 
+![Azure Cost Report Preview](report-preview.png)
+
 ---
 
 ## 🔒 Enterprise Safety & Data Compliance (Client Peace of Mind)
