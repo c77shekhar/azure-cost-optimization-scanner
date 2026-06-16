@@ -1,0 +1,32 @@
+name: Remote Azure Cost Audit Pipeline
+
+on:
+  workflow_dispatch: # Allows manual trigger button click
+  schedule:
+    - cron: '0 8 * * 1' # Automates run for every Monday at 8 AM UTC
+
+jobs:
+  azure-finops-scan:
+    runs-on: windows-latest
+    steps:
+      - name: System Code Checkout
+        uses: actions/checkout@v4
+
+      - name: Secure Authenticated Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+
+      - name: Execute Core FinOps Engine
+        uses: azure/powershell@v2
+        with:
+          inlineScript: |
+            ./AzureCostScanner.ps1
+          azPSVersion: "latest"
+
+      - name: Archive Production Audit Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Cloud-Savings-Report
+          path: AzureCostReport.html
