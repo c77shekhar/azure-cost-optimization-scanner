@@ -1,3 +1,4 @@
+
 markdown# 💰 Azure Cost Optimization & Savings Scanner
 
 An automated, 100% serverless PowerShell engine designed to natively scan Azure subscriptions, identify active billing waste, and compile presentation-ready HTML cost-audit report dashboards directly to your inbox.
