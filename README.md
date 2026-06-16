@@ -86,11 +86,6 @@ jobs:
           path: AzureCostReport.html
 ```
 
-## 🔒 Security & Compliance
-- **Read-Only Access:** This tool strictly uses `Get-Az*` commands. It has **zero deletion or modification logic**, ensuring 100% safety for your production environment.
-- **Least Privilege:** Runs perfectly under the standard Azure **Reader** RBAC role. No Owner or Global Admin privileges are required.
-- **Data Privacy:** 100% serverless and local execution. Your infrastructure and cost data never leave your secure Azure tenant.
-
 ## 📬 Contact & Consultation
 If you want to automate this scanner to run weekly on a schedule, set up multi-subscription enterprise alerts, or need help safely cleaning up these resources:
 - **Upwork:** [Your Upwork Profile Link]
