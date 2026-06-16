@@ -86,14 +86,14 @@ jobs:
           path: AzureCostReport.html
 ```
 
----
+## 🔒 Security & Compliance
+- **Read-Only Access:** This tool strictly uses `Get-Az*` commands. It has **zero deletion or modification logic**, ensuring 100% safety for your production environment.
+- **Least Privilege:** Runs perfectly under the standard Azure **Reader** RBAC role. No Owner or Global Admin privileges are required.
+- **Data Privacy:** 100% serverless and local execution. Your infrastructure and cost data never leave your secure Azure tenant.
 
-## 📬 Commercial Consultation & Customization
-Need this script customized for enterprise-wide multi-subscription scanning, Slack/Teams automated alerts, or safe automated remediation?
-
-- **Upwork Profile:** [Insert Your Upwork Link Here]
-- **LinkedIn Portfolio:** [Insert Your LinkedIn Link Here]
+## 📬 Contact & Consultation
+If you want to automate this scanner to run weekly on a schedule, set up multi-subscription enterprise alerts, or need help safely cleaning up these resources:
+- **Upwork:** [Your Upwork Profile Link]
+- **LinkedIn:** [Your LinkedIn Profile Link]
 - **Email:** `your.email@domain.com`
-
-*Let's jump on a quick 10-minute discovery call to run a Proof of Concept (PoC) audit on your dev subscription.*
 
