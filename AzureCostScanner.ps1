@@ -1,95 +1,103 @@
 # ====================================================================
 # PROJECT: Azure Automated Cost Optimization & FinOps Scanner
-# AUTHOR: c77shekhar (GitHub Portfolio)
+# AUTHOR: c77shekhar (GitHub Portfolio) & Enterprise DevOps Team
 # DESIGNED FOR: Azure Automation Runbook (PowerShell 7.2 Engine)
 # ====================================================================
 
 Disable-AzContextAutosave -Scope Process | Out-Null
+
 try {
     $AzureContext = (Connect-AzAccount -Identity).Context
-    Write-Output "SUCCESS: Authenticated using Managed Identity."
+    Write-Output "SUCCESS: Authenticated via Managed Identity."
 } catch {
-    Write-Output "WARNING: Identity context failed: $_"
+    Write-Error "CRITICAL: Managed Identity authentication failed: $_"
+    exit
 }
 
+# Pull all accessible subscriptions to prevent siloed context execution
+$Subscriptions = Get-AzSubscription
 $ReportData = [System.Collections.Generic.List[PSCustomObject]]::new()
+
 Write-Output "INFO: Azure Cost Optimization Scan Starting..."
 
-# --- Component A: Managed Disks Scan Loop ---
-try {
-    Write-Output "INFO: Auditing Managed Disks state..."
-    $Disks = Get-AzDisk -ErrorAction SilentlyContinue
-    if ($null -ne $Disks) {
-        foreach ($d in $Disks) {
-            if ($null -eq $d.ManagedBy -or $d.DiskState -eq "Unattached") {
-                $ReportData.Add([PSCustomObject]@{
-                    IssueType     = "Unattached Disk"
-                    ResourceGroup = $d.ResourceGroupName
-                    ResourceName  = $d.Name
-                    Details       = "Size: $($d.DiskSizeGB)GB, SKU: $($d.Sku.Name)"
-                    Severity      = "High"
-                })
-            }
-        }
-    }
-} catch { Write-Output "WARNING: Disk context execution skipped: $_" }
+foreach ($Sub in $Subscriptions) {
+    Write-Output "INFO: Targeting context for subscription: $($Sub.Name) ($($Sub.Id))"
+    $null = Set-AzContext -SubscriptionId $Sub.Id -ErrorAction SilentlyContinue
 
-# --- Component B: Public IP Interface Scan Loop ---
-try {
-    Write-Output "INFO: Auditing Network Public Interfaces..."
-    $IPs = Get-AzPublicIpAddress -ErrorAction SilentlyContinue
-    if ($null -ne $IPs) {
-        foreach ($ip in $IPs) {
-            if ($null -eq $ip.IpConfiguration -or $null -eq $ip.IpConfiguration.Id) {
-                $ReportData.Add([PSCustomObject]@{
-                    IssueType     = "Unused Public IP"
-                    ResourceGroup = $ip.ResourceGroupName
-                    ResourceName  = $ip.Name
-                    Details       = "IP Routing Target: $($ip.IpAddress)"
-                    Severity      = "Low"
-                })
-            }
-        }
-    }
-} catch { Write-Output "WARNING: Network routing allocation skipped: $_" }
-
-# --- 🎯 FIXED Component C: Absolute Fallback Virtual Machine Check ---
-try {
-    Write-Output "INFO: Auditing Virtual Machine compute allocations..."
-    
-    # Force load full diagnostic view to bypass runtime lazy loading
-    $VMs = Get-AzVM -ResourceGroupName "LAB-FINOPS-TEST" -Name "VM1" -Status -ErrorAction SilentlyContinue
-    
-    # Fallback option: If single load is empty, look up global list dynamically 
-    if ($null -eq $VMs) { $VMs = Get-AzVM -Status -ErrorAction SilentlyContinue }
-
-    if ($null -ne $VMs) {
-        foreach ($vm in $VMs) {
-            # Extract raw status payload explicitly
-            $RawStatuses = $vm.Statuses | Out-String
-            
-            # Dynamic bypass: If runtime properties are empty, check for 'Stopped' state via secondary evaluation
-            if ($RawStatuses -like "*PowerState/stopped*" -or $null -eq $RawStatuses -or $RawStatuses -eq "") {
-                
-                # Fetch OS properties safely
-                $OSType = "Linux/Windows"
-                if ($null -ne $vm.StorageProfile -and $null -ne $vm.StorageProfile.OsProfile) {
-                    $OSType = $vm.StorageProfile.OsProfile.OsType
+    # --- Component A: Managed Disks Scan Loop ---
+    try {
+        $Disks = Get-AzDisk -ErrorAction SilentlyContinue
+        if ($null -ne $Disks) {
+            foreach ($d in $Disks) {
+                if ($null -eq $d.ManagedBy -or $d.DiskState -eq "Unattached") {
+                    $ReportData.Add([PSCustomObject]@{
+                        Subscription  = $Sub.Name
+                        IssueType     = "Unattached Disk"
+                        ResourceGroup = $d.ResourceGroupName
+                        ResourceName  = $d.Name
+                        Details       = "Size: $($d.DiskSizeGB)GB, SKU: $($d.Sku.Name)"
+                        Severity      = "High"
+                    })
                 }
-
-                $ReportData.Add([PSCustomObject]@{
-                    IssueType     = "Stopped VM (Billed)"
-                    ResourceGroup = $vm.ResourceGroupName
-                    ResourceName  = $vm.Name
-                    Details       = "OS: $OSType | Compute state allocated but idle (Cost accumulating)"
-                    Severity      = "Medium"
-                })
             }
         }
-    }
-} catch { Write-Output "WARNING: VM query execution skipped: $_" }
+    } catch { Write-Output "WARNING: Disk context execution skipped on Sub $($Sub.Name): $_" }
 
-# 3. HTML Report UI Design Frame
+    # --- Component B: Public IP Interface Scan Loop ---
+    try {
+        $IPs = Get-AzPublicIpAddress -ErrorAction SilentlyContinue
+        if ($null -ne $IPs) {
+            foreach ($ip in $IPs) {
+                if ($null -eq $ip.IpConfiguration -or $null -eq $ip.IpConfiguration.Id) {
+                    $ReportData.Add([PSCustomObject]@{
+                        Subscription  = $Sub.Name
+                        IssueType     = "Unused Public IP"
+                        ResourceGroup = $ip.ResourceGroupName
+                        ResourceName  = $ip.Name
+                        Details       = "IP Routing Target: $($ip.IpAddress)"
+                        Severity      = "Low"
+                    })
+                }
+            }
+        }
+    } catch { Write-Output "WARNING: Network routing allocation skipped on Sub $($Sub.Name): $_" }
+
+    # --- Component C: Optimized Virtual Machine Compute Check ---
+    try {
+        # Fetch high-level inventory list first (Lightweight metadata payload)
+        $VMs = Get-AzVM -ErrorAction SilentlyContinue
+        
+        foreach ($BaseVM in $VMs) {
+            # Query instance view explicitly per VM to bypass lazy loading and throttling limits
+            $VMStatus = Get-AzVM -ResourceGroupName $BaseVM.ResourceGroupName -Name $BaseVM.Name -Status -ErrorAction SilentlyContinue
+            
+            if ($null -ne $VMStatus) {
+                # Target exact Azure API status code objects cleanly
+                $PowerState = $VMStatus.Statuses | Where-Object { $_.Code -like "PowerState/*" }
+                
+                # Check for "PowerState/stopped" (Allocated/Billed). Exclude "PowerState/deallocated" (Unbilled).
+                if ($PowerState.Code -eq "PowerState/stopped") {
+                    
+                    $OSType = "Linux/Windows"
+                    if ($null -ne $BaseVM.StorageProfile -and $null -ne $BaseVM.StorageProfile.OsProfile) {
+                        $OSType = $BaseVM.StorageProfile.OsProfile.OsType
+                    }
+
+                    $ReportData.Add([PSCustomObject]@{
+                        Subscription  = $Sub.Name
+                        IssueType     = "Stopped VM (Billed)"
+                        ResourceGroup = $BaseVM.ResourceGroupName
+                        ResourceName  = $BaseVM.Name
+                        Details       = "OS: $OSType | Compute state allocated but idle (Cost accumulating)"
+                        Severity      = "Medium"
+                    })
+                }
+            }
+        }
+    } catch { Write-Output "WARNING: VM query execution skipped on Sub $($Sub.Name): $_" }
+}
+
+# --- Component D: HTML Report UI Design Frame ---
 $Header = @"
 <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; margin: 25px; background-color: #fafafa; }
@@ -105,7 +113,7 @@ $Header = @"
     .Low { background-color: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
 </style>
 "@
-$PreText = "<h2>Azure Cost Optimization Scan Report</h2><p>The following infrastructure assets were identified as idle, detached, or stopped without deallocation:</p>"
+$PreText = "<h2>Azure Cost Optimization Scan Report</h2><p>The following infrastructure assets were identified across your tenant as idle, detached, or stopped without deallocation:</p>"
 
 if ($ReportData.Count -eq 0) {
     $HtmlBody = "$Header <h2>Azure Cost Scan Report</h2><p style='color:#16a34a; font-weight:bold; font-size:16px;'>🎉 Excellent! No infrastructure waste detected in this infrastructure layer.</p>"
@@ -118,12 +126,14 @@ if ($ReportData.Count -eq 0) {
 
 $HtmlBody | Out-File "./AzureCostReport.html" -Encoding utf8 -Force
 
-# 5. Extract Variables via Internal Native Orchestrator
+# --- Component E: Extract Variables & Trigger Notification Webhook ---
 try {
-    $LogicAppURL = Get-AutomationVariable -Name "LogicAppEmailURL"
+    $LogicAppURL = Get-AutomationVariable -Name "LogicAppEmailURL" -ErrorAction SilentlyContinue
     if ($null -ne $LogicAppURL -and $LogicAppURL -ne "") {
         $BodyJson = @{ body = $HtmlBody } | ConvertTo-Json
         Invoke-RestMethod -Uri $LogicAppURL -Method Post -Body $BodyJson -ContentType "application/json"
         Write-Output "SUCCESS: Email triggered successfully from the script!"
+    } else {
+        Write-Output "INFO: LogicAppEmailURL automation variable is empty or unconfigured. Webhook execution skipped."
     }
-} catch { Write-Output "ERROR: Execution pipeline terminated: $_" }
+} catch { Write-Error "ERROR: Notification dispatch pipeline failed: $_" }
