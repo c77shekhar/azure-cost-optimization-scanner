@@ -75,7 +75,7 @@ If a specific testing framework or Disaster Recovery (DR) resource must be exclu
 ## 📁 Repository & Delivery Structure
 
 ```text
-├── Azure-FinOps-Scanner.ps1     # Production-hardened PowerShell 5.1 Runbook Script
+├── AzureCostScanner.ps1     # Production-hardened PowerShell 5.1 Runbook Script
 ├── SOP-Client-Remediation.md    # End-User Playbook for Application Owners & Managers
 └── SOP-Technical-Deployment.md  # Infrastructure Blueprint for Systems Administrators
 ```
