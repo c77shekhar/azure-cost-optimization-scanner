@@ -32,6 +32,10 @@ I am a specialized Cloud FinOps & DevOps Consultant. If your engineering layers 
 | **Stopped VM (Billed)** | rg-testing-environment | dev-linux-node01 | OS: Linux \| Compute allocated but idle | WARNING |
 | **Unused Public IP** | rg-networking-prod | web-alb-public-ip | IP Routing Target: 9.205.xx.xx | INFO |
 
+### ✉️ Actual Email Notification Preview
+<!--- This relative markdown link looks directly for the file uploaded to your repository root --->
+![Azure FinOps Automated Email Report](report-preview.png)
+
 ---
 
 ## 🔒 Enterprise Safety & Data Compliance (Client Peace of Mind)
@@ -75,7 +79,9 @@ If a specific testing framework or Disaster Recovery (DR) resource must be exclu
 ## 📁 Repository & Delivery Structure
 
 ```text
-├── AzureCostScanner.ps1     # Production-hardened PowerShell 5.1 Runbook Script
-├── SOP-Client-Remediation.md    # End-User Playbook for Application Owners & Managers
-└── SOP-Technical-Deployment.md  # Infrastructure Blueprint for Systems Administrators
+├── Azure-FinOps-Scanner.ps1     # Production-hardened PowerShell 5.1 Runbook Script
+├── report-preview.png           # Actual screenshot of the structured email dashboard
+└── documentation/
+    ├── SOP-Client-Remediation.md    # End-User Playbook for Application Owners & Managers
+    └── SOP-Technical-Deployment.md  # Infrastructure Blueprint for Systems Administrators
 ```
